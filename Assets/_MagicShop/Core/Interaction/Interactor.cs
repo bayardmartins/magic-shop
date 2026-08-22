@@ -4,17 +4,16 @@ using MagicShop.Core;
 public class Interactor : MonoBehaviour
 {
     [Header("Interaction")]
-    [SerializeField]
-    private float interactionDistance = 5f;
-
-    [SerializeField]
-    private Camera mainCamera;
+    [SerializeField] private float interactionDistance = 5f;
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Transform interactionPosition;
 
     private InputSystem_Actions inputActions;
     private IInteractable currentInteractable;
     private InteractionAction currentAction;
     private bool isInteracting;
     InteractionUI ActiveUi => currentInteractable?.UI;
+    public Transform InteractionPosition => interactionPosition;
 
     private void Awake()
     {

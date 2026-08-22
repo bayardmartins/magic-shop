@@ -1,4 +1,5 @@
 using MagicShop.Core;
+using System;
 using UnityEngine;
 
 public class GenericInteractable : MonoBehaviour, IInteractable
@@ -9,6 +10,8 @@ public class GenericInteractable : MonoBehaviour, IInteractable
     [SerializeField] private string endMessage = "Generic action ended.";
     [SerializeField] private string startMessage = "Generic action started.";
     InteractionAction action;
+    Interactor currentInteractor;
+    bool isInteracting = false;
 
     public InteractionUI UI => ui;
 
@@ -17,7 +20,7 @@ public class GenericInteractable : MonoBehaviour, IInteractable
         action = new InteractionAction(
             actionName,
             interactor => true, // Always available
-            interactor => Debug.Log($"{actionName} executed!"),
+            interactor => Interact(),
             unavailableHint
         );
     }
@@ -34,12 +37,31 @@ public class GenericInteractable : MonoBehaviour, IInteractable
 
     public void OnInteractionEnded(Interactor interactor)
     {
-        Debug.Log(endMessage);
-
+        isInteracting = false;
+        currentInteractor = null;
+        Debug.Log(endMessage);        
     }
 
     public void OnInteractionStarted(Interactor interactor)
     {
+        if (isInteracting)
+        {
+            Debug.LogWarning("Interaction already in progress.");
+            return;
+        }
         Debug.Log(startMessage);
+        isInteracting = true;
+        currentInteractor = interactor;
+    }
+
+    private void Interact()
+    {
+        if (!isInteracting || currentInteractor == null) {
+            Debug.LogWarning("No interaction in progress.");
+            return;
+        }
+        transform.position = currentInteractor.InteractionPosition.position;
+        transform.SetParent(currentInteractor.transform);
+        Debug.Log("Generic interaction executed.");
     }
 }
