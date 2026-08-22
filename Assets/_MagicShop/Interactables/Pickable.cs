@@ -1,8 +1,7 @@
 using MagicShop.Core;
-using System;
 using UnityEngine;
 
-public class GenericInteractable : MonoBehaviour, IInteractable
+public class Pickable : MonoBehaviour, IInteractable
 {
     [SerializeField] private InteractionUI ui;
     [SerializeField] private string actionName = "Generic Action";
@@ -39,7 +38,7 @@ public class GenericInteractable : MonoBehaviour, IInteractable
     {
         isInteracting = false;
         currentInteractor = null;
-        Debug.Log(endMessage);        
+        Debug.Log(endMessage);
     }
 
     public void OnInteractionStarted(Interactor interactor)
@@ -56,6 +55,21 @@ public class GenericInteractable : MonoBehaviour, IInteractable
 
     private void Interact()
     {
+        if (!isInteracting || currentInteractor == null)
+        {
+            Debug.LogWarning("No interaction in progress.");
+            return;
+        }
+
+        bool success = currentInteractor.SetPickable(this);
+        if (!success)
+        {
+            Debug.LogWarning("Failed to pick up the item.");
+            return;
+        }
+
+        transform.position = currentInteractor.InteractionPosition.position;
+        transform.SetParent(currentInteractor.transform);
         Debug.Log("Generic interaction executed.");
     }
 }

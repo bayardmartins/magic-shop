@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using MagicShop.Core;
 
 public class Interactor : MonoBehaviour
@@ -12,9 +13,12 @@ public class Interactor : MonoBehaviour
     private IInteractable currentInteractable;
     private InteractionAction currentAction;
     private bool isInteracting;
+    private Pickable currentPicked;
+
     InteractionUI ActiveUi => currentInteractable?.UI;
     public Transform InteractionPosition => interactionPosition;
 
+    #region lifecycle
     private void Awake()
     {
         inputActions = new InputSystem_Actions();
@@ -28,10 +32,12 @@ public class Interactor : MonoBehaviour
     private void OnEnable()
     {
         inputActions.Player.Enable();
+        inputActions.Player.PrimaryAction.performed += OnPrimaryActionPerformed;
     }
 
     private void OnDisable()
     {
+        inputActions.Player.PrimaryAction.performed -= OnPrimaryActionPerformed;
         inputActions.Player.Disable();
         ClearCurrentInteractable();
     }
@@ -39,9 +45,11 @@ public class Interactor : MonoBehaviour
     private void Update()
     {
         DetectTarget();
-        HandleAction();
     }
 
+    #endregion
+
+    #region Interaction
     private void DetectTarget()
     {
         IInteractable detectedInteractable = null;
@@ -71,15 +79,17 @@ public class Interactor : MonoBehaviour
         }
     }
 
-    private void HandleAction()
+    private void HandleAction(InputAction.CallbackContext context)
     {
-        if (inputActions.Player.PrimaryAction.triggered)
+        if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
         {
-            if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
-            {
-                ExecuteInteraction();
-            }
+            ExecuteInteraction();
         }
+    }
+
+    private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
+    {
+        HandleAction(context);
     }
 
     private void ExecuteInteraction()
@@ -108,4 +118,30 @@ public class Interactor : MonoBehaviour
         currentInteractable = null;
         currentAction = null;
     }
+    #endregion
+
+    #region Pickable Interaction
+
+    public Pickable GetPickable()
+    {
+        return currentPicked;
+    }
+
+    public bool SetPickable(Pickable pickable)
+    {
+        // TODO: notificar usuario caso currentPicked nao seja nulo
+        if (currentPicked == null)
+        {
+            currentPicked = pickable;
+            return true;
+        }
+        return false;
+    }
+
+    public void ClearPickable()
+    {
+        currentPicked = null;
+    }
+
+    #endregion
 }
