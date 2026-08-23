@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.InputSystem;
 using MagicShop.Core;
+using System;
 
 public class Interactor : MonoBehaviour
 {
@@ -14,8 +15,6 @@ public class Interactor : MonoBehaviour
     private InteractionAction currentAction;
     private bool isInteracting;
     private Pickable currentPicked;
-
-    InteractionUI ActiveUi => currentInteractable?.UI;
     public Transform InteractionPosition => interactionPosition;
 
     #region lifecycle
@@ -33,11 +32,13 @@ public class Interactor : MonoBehaviour
     {
         inputActions.Player.Enable();
         inputActions.Player.PrimaryAction.performed += OnPrimaryActionPerformed;
+        inputActions.Player.SecondaryAction.performed += OnSecondaryActionPerformed;
     }
 
     private void OnDisable()
     {
         inputActions.Player.PrimaryAction.performed -= OnPrimaryActionPerformed;
+        inputActions.Player.SecondaryAction.performed -= OnSecondaryActionPerformed;
         inputActions.Player.Disable();
         ClearCurrentInteractable();
     }
@@ -49,7 +50,7 @@ public class Interactor : MonoBehaviour
 
     #endregion
 
-    #region Interaction
+    #region PrimaryAction
     private void DetectTarget()
     {
         IInteractable detectedInteractable = null;
@@ -73,23 +74,24 @@ public class Interactor : MonoBehaviour
                 if (currentAction != null && currentAction.CanExecute(this))
                 {
                     string prompt = currentInteractable.GetPrompt();
-                    ActiveUi.ShowPrompt(prompt);
+                    Sprite icon = currentInteractable.GetIcon();
+                    InteractionUI.Instance.ShowPrompt(prompt, icon);
                 }
             }
         }
     }
 
-    private void HandleAction(InputAction.CallbackContext context)
+    private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
+    {
+        HandlePrimaryAction(context);
+    }
+
+    private void HandlePrimaryAction(InputAction.CallbackContext context)
     {
         if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
         {
             ExecuteInteraction();
         }
-    }
-
-    private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
-    {
-        HandleAction(context);
     }
 
     private void ExecuteInteraction()
@@ -112,12 +114,29 @@ public class Interactor : MonoBehaviour
     {
         if (currentInteractable != null)
         {
-            ActiveUi.HideAll();
+            InteractionUI.Instance.HideAll();
         }
 
         currentInteractable = null;
         currentAction = null;
     }
+    #endregion
+
+    #region SecondaryAction
+    private void OnSecondaryActionPerformed(InputAction.CallbackContext context)
+    {
+        HandleSecundaryAction(context);
+    }
+
+    private void HandleSecundaryAction(InputAction.CallbackContext context)
+    {
+        if (currentPicked != null)
+        {
+            DropPickable();
+            return;
+        }
+    }
+
     #endregion
 
     #region Pickable Interaction
@@ -141,6 +160,12 @@ public class Interactor : MonoBehaviour
     public void ClearPickable()
     {
         currentPicked = null;
+    }
+
+    private void DropPickable()
+    {
+        currentPicked.Drop();
+        ClearPickable();
     }
 
     #endregion

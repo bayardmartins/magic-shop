@@ -4,21 +4,20 @@ using UnityEngine;
 
 public class GenericInteractable : MonoBehaviour, IInteractable
 {
-    [SerializeField] private InteractionUI ui;
     [SerializeField] private string actionName = "Generic Action";
     [SerializeField] private string unavailableHint = "This action is not available.";
     [SerializeField] private string endMessage = "Generic action ended.";
     [SerializeField] private string startMessage = "Generic action started.";
+    [SerializeField] private Sprite icon;
     InteractionAction action;
     Interactor currentInteractor;
     bool isInteracting = false;
-
-    public InteractionUI UI => ui;
 
     void Awake()
     {
         action = new InteractionAction(
             actionName,
+            icon,
             interactor => true, // Always available
             interactor => Interact(),
             unavailableHint
@@ -57,5 +56,10 @@ public class GenericInteractable : MonoBehaviour, IInteractable
     private void Interact()
     {
         Debug.Log("Generic interaction executed.");
+    }
+
+    public Sprite GetIcon()
+    {
+        throw new NotImplementedException();
     }
 }

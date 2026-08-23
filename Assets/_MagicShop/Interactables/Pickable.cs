@@ -3,25 +3,26 @@ using UnityEngine;
 
 public class Pickable : MonoBehaviour, IInteractable
 {
-    [SerializeField] private InteractionUI ui;
     [SerializeField] private string actionName = "Generic Action";
     [SerializeField] private string unavailableHint = "This action is not available.";
     [SerializeField] private string endMessage = "Generic action ended.";
     [SerializeField] private string startMessage = "Generic action started.";
+    [SerializeField] private Sprite icon;
     InteractionAction action;
     Interactor currentInteractor;
     bool isInteracting = false;
-
-    public InteractionUI UI => ui;
+    Rigidbody rb;
 
     void Awake()
     {
         action = new InteractionAction(
             actionName,
+            icon,
             interactor => true, // Always available
             interactor => Interact(),
             unavailableHint
         );
+        rb = GetComponent<Rigidbody>();
     }
 
     public InteractionAction GetAvailableAction(Interactor interactor)
@@ -32,6 +33,11 @@ public class Pickable : MonoBehaviour, IInteractable
     public string GetPrompt()
     {
         return actionName;
+    }
+
+    public Sprite GetIcon()
+    {
+        return icon;    
     }
 
     public void OnInteractionEnded(Interactor interactor)
@@ -70,6 +76,13 @@ public class Pickable : MonoBehaviour, IInteractable
 
         transform.position = currentInteractor.InteractionPosition.position;
         transform.SetParent(currentInteractor.transform);
+        rb.isKinematic = true;
         Debug.Log("Generic interaction executed.");
+    }
+
+    public void Drop()
+    {
+        transform.SetParent(null);
+        rb.isKinematic = false;
     }
 }
