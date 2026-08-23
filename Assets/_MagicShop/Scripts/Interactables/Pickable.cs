@@ -8,10 +8,14 @@ public class Pickable : MonoBehaviour, IInteractable
     [SerializeField] private string endMessage = "Generic action ended.";
     [SerializeField] private string startMessage = "Generic action started.";
     [SerializeField] private Sprite icon;
+    [SerializeField] private GameObject blueprintPrefab;
+
     InteractionAction action;
     Interactor currentInteractor;
     bool isInteracting = false;
     Rigidbody rb;
+
+    public GameObject BlueprintPrefab => blueprintPrefab;
 
     void Awake()
     {
@@ -82,6 +86,13 @@ public class Pickable : MonoBehaviour, IInteractable
 
     public void Drop()
     {
+        transform.SetParent(null);
+        rb.isKinematic = false;
+    }
+
+    public void PlaceItem(Vector3 position)
+    {
+        transform.position = position;
         transform.SetParent(null);
         rb.isKinematic = false;
     }
