@@ -1,21 +1,23 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 using MagicShop.Core;
+using System;
 
 public class Interactor : MonoBehaviour
 {
     [Header("Interaction")]
-    [SerializeField]
-    private float interactionDistance = 5f;
-
-    [SerializeField]
-    private Camera mainCamera;
+    [SerializeField] private float interactionDistance = 5f;
+    [SerializeField] private Camera mainCamera;
+    [SerializeField] private Transform interactionPosition;
 
     private InputSystem_Actions inputActions;
     private IInteractable currentInteractable;
     private InteractionAction currentAction;
     private bool isInteracting;
-    InteractionUI ActiveUi => currentInteractable?.UI;
+    private Pickable currentPicked;
+    public Transform InteractionPosition => interactionPosition;
 
+    #region lifecycle
     private void Awake()
     {
         inputActions = new InputSystem_Actions();
@@ -29,10 +31,14 @@ public class Interactor : MonoBehaviour
     private void OnEnable()
     {
         inputActions.Player.Enable();
+        inputActions.Player.PrimaryAction.performed += OnPrimaryActionPerformed;
+        inputActions.Player.SecondaryAction.performed += OnSecondaryActionPerformed;
     }
 
     private void OnDisable()
     {
+        inputActions.Player.PrimaryAction.performed -= OnPrimaryActionPerformed;
+        inputActions.Player.SecondaryAction.performed -= OnSecondaryActionPerformed;
         inputActions.Player.Disable();
         ClearCurrentInteractable();
     }
@@ -40,9 +46,11 @@ public class Interactor : MonoBehaviour
     private void Update()
     {
         DetectTarget();
-        HandleAction();
     }
 
+    #endregion
+
+    #region PrimaryAction
     private void DetectTarget()
     {
         IInteractable detectedInteractable = null;
@@ -66,20 +74,23 @@ public class Interactor : MonoBehaviour
                 if (currentAction != null && currentAction.CanExecute(this))
                 {
                     string prompt = currentInteractable.GetPrompt();
-                    ActiveUi.ShowPrompt(prompt);
+                    Sprite icon = currentInteractable.GetIcon();
+                    InteractionUI.Instance.ShowPrompt(prompt, icon);
                 }
             }
         }
     }
 
-    private void HandleAction()
+    private void OnPrimaryActionPerformed(InputAction.CallbackContext context)
     {
-        if (inputActions.Player.PrimaryAction.triggered)
+        HandlePrimaryAction(context);
+    }
+
+    private void HandlePrimaryAction(InputAction.CallbackContext context)
+    {
+        if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
         {
-            if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
-            {
-                ExecuteInteraction();
-            }
+            ExecuteInteraction();
         }
     }
 
@@ -103,10 +114,59 @@ public class Interactor : MonoBehaviour
     {
         if (currentInteractable != null)
         {
-            ActiveUi.HideAll();
+            InteractionUI.Instance.HideAll();
         }
 
         currentInteractable = null;
         currentAction = null;
     }
+    #endregion
+
+    #region SecondaryAction
+    private void OnSecondaryActionPerformed(InputAction.CallbackContext context)
+    {
+        HandleSecundaryAction(context);
+    }
+
+    private void HandleSecundaryAction(InputAction.CallbackContext context)
+    {
+        if (currentPicked != null)
+        {
+            DropPickable();
+            return;
+        }
+    }
+
+    #endregion
+
+    #region Pickable Interaction
+
+    public Pickable GetPickable()
+    {
+        return currentPicked;
+    }
+
+    public bool SetPickable(Pickable pickable)
+    {
+        // TODO: notificar usuario caso currentPicked nao seja nulo
+        if (currentPicked == null)
+        {
+            currentPicked = pickable;
+            return true;
+        }
+        return false;
+    }
+
+    public void ClearPickable()
+    {
+        currentPicked = null;
+    }
+
+    private void DropPickable()
+    {
+        currentPicked.Drop();
+        ClearPickable();
+    }
+
+    #endregion
 }

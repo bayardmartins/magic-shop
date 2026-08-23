@@ -68,6 +68,7 @@ namespace MagicShop.Player
                     Debug.LogWarning("Nenhuma CinemachineCamera encontrada na cena");
                 }
             }
+            CursorManager.Instance.LockCursor();
         }
 
         private void Update()
