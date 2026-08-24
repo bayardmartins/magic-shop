@@ -3,7 +3,6 @@ using UnityEngine.InputSystem;
 using MagicShop.Core;
 using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 
 public class Interactor : MonoBehaviour
 {
@@ -13,12 +12,16 @@ public class Interactor : MonoBehaviour
     [SerializeField] private Transform interactionPosition;
     [SerializeField] private int pickableLimit = 5;
 
+    [Header("Snap Configuration")]
+    [SerializeField] private float snapMagneticForce = 1f;
+    [SerializeField] private bool enableSnapping = true;
+
     private InputSystem_Actions inputActions;
     private IInteractable currentInteractable;
     private InteractionAction currentAction;
     private bool isInteracting;
     private List<Pickable> currentPicked;
-    private GameObject currentBlueprint;
+    private Blueprint currentBlueprint;
     public Transform InteractionPosition => interactionPosition;
 
     #region lifecycle
@@ -96,12 +99,10 @@ public class Interactor : MonoBehaviour
     {
         if (currentInteractable != null && currentAction != null && currentAction.CanExecute(this))
         {
-            Debug.Log("Executing interaction with: " + currentInteractable.GetPrompt());
             ExecuteInteraction();
         }
         else if (currentBlueprint != null)
         {
-            Debug.Log("Placing item: " + currentPicked[currentPicked.Count - 1].name);
             PlaceItem();
         }
     }
@@ -156,9 +157,9 @@ public class Interactor : MonoBehaviour
     private void PlaceItem()
     {
         var lastPickable = currentPicked[currentPicked.Count - 1];
-        lastPickable.PlaceItem(currentBlueprint.transform.position);
+        lastPickable.PlaceItem(currentBlueprint.transform.position, currentBlueprint.transform.rotation);
         currentPicked.Remove(lastPickable);
-        Destroy(currentBlueprint);
+        Destroy(currentBlueprint.gameObject);
         currentBlueprint = null;
     }
 
@@ -202,7 +203,7 @@ public class Interactor : MonoBehaviour
             int lastIndex = currentPicked.Count - 1;
             currentPicked[lastIndex].Drop();
             currentPicked.RemoveAt(lastIndex);
-            Destroy(currentBlueprint);
+            Destroy(currentBlueprint.gameObject);
             currentBlueprint = null;
         }
     }
@@ -222,29 +223,62 @@ public class Interactor : MonoBehaviour
             }
             else
             {
-                Destroy(currentBlueprint);
-                currentBlueprint = null;
+                if (currentBlueprint != null)
+                {
+                    Destroy(currentBlueprint.gameObject);
+                    currentBlueprint = null;
+                }
                 return;
             }
 
             if (currentBlueprint == null)
             {
                 // Cria o blueprint do item no mundo
-                currentBlueprint = Instantiate(lastPickable.BlueprintPrefab, cursorPosition, Quaternion.identity);
-            }
-            else
-            {
-                // Atualiza a posição do blueprint para seguir o cursor
-                currentBlueprint.transform.position = cursorPosition;
+                if (lastPickable.BlueprintPrefab == null)
+                {
+                    Debug.LogWarning($"Pickable {lastPickable.name} does not have a BlueprintPrefab assigned.");
+                    return;
+                }
+                else
+                {
+                    currentBlueprint = Instantiate(lastPickable.BlueprintPrefab, cursorPosition, Quaternion.identity);
+                }
             }
 
+            // Aplica snap magnetico com alinhamento de snap points
+            Vector3 finalPosition = cursorPosition;
+            if (enableSnapping)
+            {
+                if (currentBlueprint != null)
+                {
+                    // Encontra o melhor par de snap points considerando o lado (left/right)
+                    SnapZone.SnapPointPair bestPair = SnapZone.Instance.FindBestSnapPointPairForBlueprint(currentBlueprint, cursorPosition);
+
+                    if (bestPair.blueprintSnapTransform != null && bestPair.environmentSnap != null)
+                    {
+                        // Calcula a posicao onde o snap point da blueprint se alinhara com o snap point do ambiente
+                        Vector3 alignedPosition = SnapZone.Instance.CalculateAlignedPosition(
+                            currentBlueprint.transform.position, 
+                            bestPair.blueprintSnapTransform, 
+                            bestPair.environmentSnap
+                        );
+
+                        // Interpola entre a posicao do cursor e a posicao alinhada
+                        // snapMagneticForce controla quao forte eh o "ima" (0 = sem snap, 1 = snap completo)
+                        finalPosition = Vector3.Lerp(cursorPosition, alignedPosition, snapMagneticForce);
+                    }
+                }
+            }
+
+            // Atualiza a posição do blueprint para seguir o cursor (com snap)
+            currentBlueprint.transform.position = finalPosition;
         }
         else
         {
             if (currentBlueprint != null)
             {
+                Destroy(currentBlueprint.gameObject);
                 currentBlueprint = null;
-                Destroy(currentBlueprint);
             }
         }
     }

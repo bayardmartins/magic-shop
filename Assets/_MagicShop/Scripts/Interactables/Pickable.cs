@@ -8,14 +8,14 @@ public class Pickable : MonoBehaviour, IInteractable
     [SerializeField] private string endMessage = "Generic action ended.";
     [SerializeField] private string startMessage = "Generic action started.";
     [SerializeField] private Sprite icon;
-    [SerializeField] private GameObject blueprintPrefab;
+    [SerializeField] private Blueprint blueprintPrefab;
 
     InteractionAction action;
     Interactor currentInteractor;
     bool isInteracting = false;
     Rigidbody rb;
 
-    public GameObject BlueprintPrefab => blueprintPrefab;
+    public Blueprint BlueprintPrefab => blueprintPrefab;
 
     void Awake()
     {
@@ -79,6 +79,8 @@ public class Pickable : MonoBehaviour, IInteractable
         }
 
         transform.position = currentInteractor.InteractionPosition.position;
+        // reseta a rotacao do objeto para a rotacao do interactor
+        transform.rotation = currentInteractor.transform.rotation;
         transform.SetParent(currentInteractor.transform);
         rb.isKinematic = true;
         Debug.Log("Generic interaction executed.");
@@ -90,9 +92,10 @@ public class Pickable : MonoBehaviour, IInteractable
         rb.isKinematic = false;
     }
 
-    public void PlaceItem(Vector3 position)
+    public void PlaceItem(Vector3 position, Quaternion rotation)
     {
         transform.position = position;
+        transform.rotation = rotation;
         transform.SetParent(null);
         rb.isKinematic = false;
     }
