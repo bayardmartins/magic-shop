@@ -203,7 +203,8 @@ public class Interactor : MonoBehaviour
             int lastIndex = currentPicked.Count - 1;
             currentPicked[lastIndex].Drop();
             currentPicked.RemoveAt(lastIndex);
-            Destroy(currentBlueprint.gameObject);
+            if (currentBlueprint != null)
+                Destroy(currentBlueprint.gameObject);
             currentBlueprint = null;
         }
     }
@@ -225,7 +226,8 @@ public class Interactor : MonoBehaviour
             {
                 if (currentBlueprint != null)
                 {
-                    Destroy(currentBlueprint.gameObject);
+                    if (currentBlueprint != null)
+                        Destroy(currentBlueprint.gameObject);
                     currentBlueprint = null;
                 }
                 return;
@@ -277,7 +279,8 @@ public class Interactor : MonoBehaviour
         {
             if (currentBlueprint != null)
             {
-                Destroy(currentBlueprint.gameObject);
+                if (currentBlueprint != null)
+                    Destroy(currentBlueprint.gameObject);
                 currentBlueprint = null;
             }
         }
