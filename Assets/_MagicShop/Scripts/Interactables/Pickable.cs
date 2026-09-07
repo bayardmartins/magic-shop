@@ -1,4 +1,5 @@
 using MagicShop.Core;
+using MoreMountains.Tools;
 using UnityEngine;
 
 public class Pickable : MonoBehaviour, IInteractable
@@ -9,11 +10,13 @@ public class Pickable : MonoBehaviour, IInteractable
     [SerializeField] private string startMessage = "Generic action started.";
     [SerializeField] private Sprite icon;
     [SerializeField] private Blueprint blueprintPrefab;
+    [SerializeField] private float intervalDuration = 0.3f;
 
     InteractionAction action;
     Interactor currentInteractor;
     bool isInteracting = false;
     Rigidbody rb;
+    public MMTween.MMTweenCurve PlacementCurve = MMTween.MMTweenCurve.EaseInOutOverhead;
 
     public Blueprint BlueprintPrefab => blueprintPrefab;
 
@@ -78,9 +81,10 @@ public class Pickable : MonoBehaviour, IInteractable
             return;
         }
 
-        transform.position = currentInteractor.InteractionPosition.position;
-        // reseta a rotacao do objeto para a rotacao do interactor
-        transform.rotation = currentInteractor.transform.rotation;
+        // TODO: adicionar um lerp e uma aleatoriedade na rotação do objeto
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 90f);
+        MMTween.MoveTransform(this, this.transform, this.transform.position, currentInteractor.InteractionPosition.position, null, 0f, intervalDuration, PlacementCurve);
+
         transform.SetParent(currentInteractor.transform);
         rb.isKinematic = true;
         Debug.Log("Generic interaction executed.");
@@ -94,9 +98,18 @@ public class Pickable : MonoBehaviour, IInteractable
 
     public void PlaceItem(Vector3 position, Quaternion rotation)
     {
-        transform.position = position;
+        StartCoroutine(PlaceItemCoroutine(position, rotation));
+    }
+
+    private System.Collections.IEnumerator PlaceItemCoroutine(Vector3 position, Quaternion rotation)
+    {
+        //transform.position = position;
         transform.rotation = rotation;
         transform.SetParent(null);
-        rb.isKinematic = false;
+        yield return MMTween.MoveTransform(this, this.transform, this.transform.position, position, null, 0f, intervalDuration, PlacementCurve);
+        if (!SnapZone.Instance.IsSnapping)
+        {
+            rb.isKinematic = false;
+        }
     }
 }

@@ -16,6 +16,9 @@ namespace MagicShop.Core
 
         private List<SnapPoint> registeredSnapPoints = new List<SnapPoint>();
         private static SnapZone instance;
+        private bool isSnapping = false;
+
+        public bool IsSnapping => isSnapping;
 
         public static SnapZone Instance
         {
@@ -23,7 +26,7 @@ namespace MagicShop.Core
             {
                 if (instance == null)
                 {
-                    instance = FindObjectOfType<SnapZone>();
+                    instance = FindFirstObjectByType<SnapZone>();
                     if (instance == null)
                     {
                         GameObject go = new GameObject("SnapZone");
@@ -166,6 +169,7 @@ namespace MagicShop.Core
         {
             if (blueprint == null)
             {
+                isSnapping = false;
                 return new SnapPointPair(null, null, -1);
             }
 
@@ -174,6 +178,7 @@ namespace MagicShop.Core
 
             if (nearestEnvironmentSnap == null)
             {
+                isSnapping = false;
                 return new SnapPointPair(null, null, -1);
             }
 
@@ -182,6 +187,7 @@ namespace MagicShop.Core
 
             if (blueprintSnapPoint == null)
             {
+                isSnapping = false;
                 return new SnapPointPair(null, null, -1);
             }
 
@@ -190,9 +196,11 @@ namespace MagicShop.Core
             // Verifica se a distancia eh valida
             if (distance > maxSnapDistance)
             {
+                isSnapping = false;
                 return new SnapPointPair(null, null, -1);
             }
 
+            isSnapping = true;
             return new SnapPointPair(blueprintSnapPoint, nearestEnvironmentSnap, distance);
         }
 
@@ -220,7 +228,7 @@ namespace MagicShop.Core
         /// </summary>
         private void RegisterAllSnapPoints()
         {
-            SnapPoint[] snapPoints = FindObjectsOfType<SnapPoint>();
+            SnapPoint[] snapPoints = FindObjectsByType<SnapPoint>(FindObjectsSortMode.None);
             foreach (SnapPoint snapPoint in snapPoints)
             {
                 RegisterSnapPoint(snapPoint);
