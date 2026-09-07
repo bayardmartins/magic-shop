@@ -41,14 +41,12 @@ public class Interactor : MonoBehaviour
         inputActions.Player.Enable();
         inputActions.Player.PrimaryAction.performed += OnPrimaryActionPerformed;
         inputActions.Player.SecondaryAction.performed += OnSecondaryActionPerformed;
-        inputActions.Player.Interact.performed += OnInteractActionPerformed;
     }
 
     private void OnDisable()
     {
         inputActions.Player.PrimaryAction.performed -= OnPrimaryActionPerformed;
         inputActions.Player.SecondaryAction.performed -= OnSecondaryActionPerformed;
-        inputActions.Player.Interact.performed -= OnInteractActionPerformed;
         inputActions.Player.Disable();
         ClearCurrentInteractable();
     }
@@ -103,6 +101,10 @@ public class Interactor : MonoBehaviour
         {
             ExecuteInteraction();
         }
+        else if (currentBlueprint != null)
+        {
+            PlaceItem();
+        }
     }
 
     private void ExecuteInteraction()
@@ -141,28 +143,13 @@ public class Interactor : MonoBehaviour
 
     private void HandleSecondaryAction(InputAction.CallbackContext context)
     {
-        if (currentBlueprint != null)
-        {
-            PlaceItem();
-        }
-    }
-
-    #endregion
-
-    #region InteractAction
-    private void OnInteractActionPerformed(InputAction.CallbackContext context)
-    {
-        HandleInteractionAction(context);
-    }
-
-    private void HandleInteractionAction(InputAction.CallbackContext context)
-    {
         if (currentPicked != null && currentPicked.Count > 0)
         {
             DropLastPickable();
             return;
         }
     }
+
     #endregion
 
     #region Pickable Interaction

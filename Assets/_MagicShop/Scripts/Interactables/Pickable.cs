@@ -11,6 +11,7 @@ public class Pickable : MonoBehaviour, IInteractable
     [SerializeField] private Sprite icon;
     [SerializeField] private Blueprint blueprintPrefab;
     [SerializeField] private float intervalDuration = 0.3f;
+    [SerializeField] private bool rotateWhenPick = true;
 
     InteractionAction action;
     Interactor currentInteractor;
@@ -82,7 +83,7 @@ public class Pickable : MonoBehaviour, IInteractable
         }
 
         // TODO: adicionar um lerp e uma aleatoriedade na rotação do objeto
-        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, 90f);
+        transform.rotation = Quaternion.Euler(transform.rotation.eulerAngles.x, transform.rotation.eulerAngles.y, rotateWhenPick ? 90f : transform.rotation.eulerAngles.z);
         MMTween.MoveTransform(this, this.transform, this.transform.position, currentInteractor.InteractionPosition.position, null, 0f, intervalDuration, PlacementCurve);
 
         transform.SetParent(currentInteractor.transform);
