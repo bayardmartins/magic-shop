@@ -523,7 +523,7 @@ MonoBehaviour:
   interactionDistance: 20
   mainCamera: {fileID: 330585545}
   interactionPosition: {fileID: 1873999987}
-  pickableLimit: 1
+  pickableLimit: 10
   snapMagneticForce: 1
   enableSnapping: 1
 --- !u!1001 &90486788

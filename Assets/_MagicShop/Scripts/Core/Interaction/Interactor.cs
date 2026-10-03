@@ -224,6 +224,7 @@ public class Interactor : MonoBehaviour
             }
             else
             {
+                // limpa a blueprint da tela
                 if (currentBlueprint != null)
                 {
                     if (currentBlueprint != null)
